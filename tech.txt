@@ -1,0 +1,9 @@
+next js
+shadcn ui
+tailwind css
+firebase realtime database
+eslint
+
+
+git clone repo
+pnpm i -> npm i -g pnpm
