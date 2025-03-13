@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation"
 import { LayoutDashboard, Package, BarChart, Settings, LogOut, Sun, Moon, User, Bell, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
+import { useAuth } from "@/components/auth-provider"
+import { toast } from "react-toastify"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +22,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 export function Sidebar() {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
+  const { user, logout } = useAuth()
   const [isMobile, setIsMobile] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -63,6 +66,16 @@ export function Sidebar() {
       active: pathname === "/settings",
     },
   ]
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      // Toast is handled in the auth provider
+    } catch (error) {
+      console.error("Failed to logout:", error)
+      toast.error("Failed to logout. Please try again.")
+    }
+  }
 
   const SidebarContent = () => (
     <>
@@ -124,12 +137,12 @@ export function Sidebar() {
 
         <div className="flex items-center gap-3 mb-4 p-2 rounded-lg border">
           <Avatar>
-            <AvatarImage src="/placeholder.svg" alt="Admin" />
-            <AvatarFallback>AD</AvatarFallback>
+            <AvatarImage src="/placeholder.svg" alt="User" />
+            <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">Admin User</p>
-            <p className="text-xs text-muted-foreground truncate">admin@example.com</p>
+            <p className="text-sm font-medium truncate">{user?.email || "User"}</p>
+            <p className="text-xs text-muted-foreground truncate">Account</p>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -143,12 +156,12 @@ export function Sidebar() {
               <DropdownMenuItem>Profile</DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
-        <Button variant="outline" className="w-full justify-start">
+        <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />
           Logout
         </Button>
