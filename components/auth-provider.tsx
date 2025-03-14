@@ -10,6 +10,7 @@ import {
   signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
+  sendEmailVerification,
 } from "firebase/auth"
 import { auth } from "@/lib/firebase"
 import { useRouter, usePathname } from "next/navigation"
@@ -22,6 +23,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
+  sendVerificationEmail: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -46,11 +48,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(currentUser)
         setLoading(false)
 
-        // Redirect logic
+        // Redirect logic - only redirect to dashboard if user is verified
         if (!currentUser && !pathname.includes("/auth/")) {
           router.push("/auth/login")
         } else if (currentUser && pathname.includes("/auth/")) {
-          router.push("/")
+          // Only redirect to dashboard if email is verified
+          if (currentUser.emailVerified) {
+            router.push("/")
+          } else if (!pathname.includes("/auth/verify-email")) {
+            // If email is not verified and not on verify-email page, redirect to verify-email page
+            router.push("/auth/verify-email")
+          }
         }
       },
       (error) => {
@@ -67,8 +75,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!auth) throw new Error("Firebase authentication is not initialized")
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password)
-      router.push("/")
+      // Create the user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+      const user = userCredential.user
+
+      // Send verification email using Firebase's built-in method
+      await sendEmailVerification(user)
+
+      // Also send a custom email using our API route
+      try {
+        // Generate verification link - Firebase will handle this automatically
+        // but we're also sending our own custom email
+        const verificationLink = `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(email)}`
+
+        await fetch("/api/send-verification-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            verificationLink,
+          }),
+        })
+      } catch (emailError) {
+        console.error("Error sending custom verification email:", emailError)
+        // Continue even if custom email fails, as Firebase's email was already sent
+      }
+
+      // Redirect to verification page
+      router.push("/auth/verify-email")
+
+      toast.success("Account created! Please check your email to verify your account.")
     } catch (error: any) {
       console.error("Registration error:", error)
       throw error
@@ -79,10 +117,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!auth) throw new Error("Firebase authentication is not initialized")
 
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      const userCredential = await signInWithEmailAndPassword(auth, email, password)
+      const user = userCredential.user
+
+      // Check if email is verified
+      if (!user.emailVerified) {
+        // Sign out the user if email is not verified
+        await signOut(auth)
+        throw new Error("auth/email-not-verified")
+      }
+
+      toast.success("Login successful!")
       router.push("/")
     } catch (error: any) {
       console.error("Login error:", error)
+
+      // Handle specific error for unverified email
+      if (error.message === "auth/email-not-verified") {
+        throw new Error("auth/email-not-verified")
+      }
+
       throw error
     }
   }
@@ -112,6 +166,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const sendVerificationEmail = async () => {
+    if (!auth || !auth.currentUser) throw new Error("No authenticated user found")
+
+    try {
+      await sendEmailVerification(auth.currentUser)
+
+      // Also send custom email
+      try {
+        const email = auth.currentUser.email
+        const verificationLink = `${window.location.origin}/auth/verify-email?email=${encodeURIComponent(email || "")}`
+
+        await fetch("/api/send-verification-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            verificationLink,
+          }),
+        })
+      } catch (emailError) {
+        console.error("Error sending custom verification email:", emailError)
+      }
+
+      toast.success("Verification email sent! Please check your inbox.")
+    } catch (error: any) {
+      console.error("Error sending verification email:", error)
+      toast.error("Failed to send verification email: " + error.message)
+      throw error
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -121,6 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         resetPassword,
+        sendVerificationEmail,
       }}
     >
       {children}

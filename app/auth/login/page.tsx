@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
 import { auth } from "@/lib/firebase"
 import { toast } from "react-toastify"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const { login } = useAuth()
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [firebaseInitialized, setFirebaseInitialized] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     // Check if Firebase Auth is initialized
@@ -42,7 +44,6 @@ export default function LoginPage() {
 
     try {
       await login(email, password)
-      toast.success("Login successful!")
     } catch (err: any) {
       console.error("Login error:", err)
 
@@ -50,9 +51,13 @@ export default function LoginPage() {
       if (err.message.includes("auth/invalid-credential")) {
         toast.error("Invalid email or password. Please try again.")
       } else if (err.message.includes("auth/user-not-found")) {
-        toast.error("No account found with this email. Please register first.")
+        toast.error("Akun tidak ditemukan. Silakan daftar terlebih dahulu.")
       } else if (err.message.includes("auth/wrong-password")) {
-        toast.error("Incorrect password. Please try again.")
+        toast.error("Password yang Anda masukkan salah.")
+      } else if (err.message.includes("auth/email-not-verified")) {
+        toast.error("Silakan verifikasi email Anda sebelum login.")
+        // Redirect to verify email page
+        router.push(`/auth/verify-email?email=${encodeURIComponent(email)}`)
       } else if (err.message.includes("auth/too-many-requests")) {
         toast.error("Too many failed login attempts. Please try again later or reset your password.")
       } else {

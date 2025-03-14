@@ -15,11 +15,11 @@ const firebaseConfig = {
   measurementId: "G-B34Z87GMC1",
 };
 
-// Deklarasi variabel dengan tipe yang benar
-let app: FirebaseApp | null = null;
-let database: Database | null = null;
-let storage: FirebaseStorage | null = null;
-let auth: Auth | null = null;
+// Inisialisasi Firebase
+let app: FirebaseApp;
+let database: Database;
+let storage: FirebaseStorage;
+let auth: Auth;
 
 try {
   app = initializeApp(firebaseConfig);
@@ -28,18 +28,15 @@ try {
   auth = getAuth(app);
 
   // Atur persistence hanya jika dijalankan di browser
-  if (typeof window !== "undefined" && auth) {
+  if (typeof window !== "undefined") {
     setPersistence(auth, browserLocalPersistence).catch((error) => {
       console.error("Error setting auth persistence:", error);
     });
   }
 } catch (error) {
   console.error("Error initializing Firebase:", error);
-  app = null;
-  database = null;
-  storage = null;
-  auth = null;
+  throw error; // Lempar error agar lebih mudah ditangani di tempat lain
 }
 
-// Ekspor variabel dengan tipe yang benar
+// Ekspor variabel
 export { app, database, storage, auth };
