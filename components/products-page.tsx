@@ -11,7 +11,8 @@ import { ProductDialog } from "@/components/product-dialog"
 import { Badge } from "@/components/ui/badge"
 import type { Product } from "@/lib/types"
 import { formatCurrency, productCategories } from "@/lib/utils"
-import { Plus, Edit, Trash2, Filter } from "lucide-react"
+import { Plus, Edit, Trash2, Filter, Search } from "lucide-react"
+import { Label } from "@/components/ui/label"
 
 export function ProductsPage() {
   const { products, loading, deleteProduct } = useFirebase()
@@ -31,7 +32,7 @@ export function ProductsPage() {
     if (maxPrice > priceRange[1]) {
       setPriceRange([0, maxPrice])
     }
-  }, [maxPrice, priceRange]) // Added priceRange to dependencies
+  }, [maxPrice, priceRange])
 
   useEffect(() => {
     if (!loading) {
@@ -93,11 +94,12 @@ export function ProductsPage() {
       <div className="flex flex-col md:flex-row gap-4">
         <div className="w-full md:w-64 space-y-4">
           <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search products..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full"
+              className="w-full pl-8"
             />
           </div>
 
@@ -112,7 +114,7 @@ export function ProductsPage() {
 
           <div className={`space-y-4 ${showFilters ? "block" : "hidden md:block"}`}>
             <div className="space-y-2">
-              <label className="text-sm font-medium">Category</label>
+              <Label className="text-sm font-medium">Category</Label>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Categories" />
@@ -129,7 +131,7 @@ export function ProductsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Price Range</label>
+              <Label className="text-sm font-medium">Price Range</Label>
               <div className="pt-6 px-2">
                 <Slider value={priceRange} min={0} max={maxPrice} step={10} onValueChange={setPriceRange} />
                 <div className="flex justify-between mt-2 text-sm text-muted-foreground">
@@ -140,7 +142,7 @@ export function ProductsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Stock Status</label>
+              <Label className="text-sm font-medium">Stock Status</Label>
               <Select value={stockFilter} onValueChange={setStockFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="All Stock" />
@@ -158,7 +160,7 @@ export function ProductsPage() {
 
         <div className="flex-1">
           {filteredProducts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 border rounded-lg">
+            <div className="flex flex-col items-center justify-center h-64 border rounded-lg bg-card shadow-sm">
               <p className="text-muted-foreground">No products found</p>
               <Button
                 variant="link"
@@ -177,14 +179,14 @@ export function ProductsPage() {
               {filteredProducts.map((product) => (
                 <Card
                   key={product.id}
-                  className="overflow-hidden group transition-all duration-300 hover:shadow-lg border-2 hover:border-primary/20"
+                  className="overflow-hidden group transition-all duration-300 hover:shadow-md border-none shadow-sm"
                 >
                   <CardContent className="p-0">
                     <div className="relative aspect-square overflow-hidden">
                       <img
                         src={product.image || "/placeholder.svg"}
                         alt={product.name}
-                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110"
+                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-4">
                         <div className="w-full">
@@ -263,7 +265,7 @@ export function ProductsPage() {
         </div>
       </div>
 
-      <ProductDialog open={showAddDialog} onOpenChange={setShowAddDialog} mode="add"  />
+      <ProductDialog open={showAddDialog} onOpenChange={setShowAddDialog} mode="add" />
 
       {editingProduct && (
         <ProductDialog

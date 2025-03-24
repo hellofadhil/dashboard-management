@@ -3,7 +3,21 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Package, BarChart, Settings, LogOut, Sun, Moon, User, Bell, Menu, X } from "lucide-react"
+import {
+  LayoutDashboard,
+  Package,
+  Settings,
+  LogOut,
+  Sun,
+  Moon,
+  User,
+  Bell,
+  Menu,
+  X,
+  Users,
+  ShoppingCart,
+  Shield,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
 import { useAuth } from "@/components/auth-provider"
@@ -18,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
+import { Logo } from "./logo"
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -54,10 +69,22 @@ export function Sidebar() {
       active: pathname === "/products",
     },
     {
-      label: "Analytics",
-      icon: BarChart,
-      href: "/analytics",
-      active: pathname === "/analytics",
+      label: "Orders",
+      icon: ShoppingCart,
+      href: "/orders",
+      active: pathname === "/orders",
+    },
+    {
+      label: "Customers",
+      icon: Users,
+      href: "/customers",
+      active: pathname === "/customers",
+    },
+    {
+      label: "Staff",
+      icon: Shield,
+      href: "/staff",
+      active: pathname === "/staff",
     },
     {
       label: "Settings",
@@ -79,8 +106,8 @@ export function Sidebar() {
 
   const SidebarContent = () => (
     <>
-      <div className="p-6 border-b flex items-center justify-between">
-        <h1 className="text-xl font-bold">Ecommerce Dashboard</h1>
+      <div className="p-5 border-b flex items-center justify-between">
+        <Logo size="sm" />
         {isMobile && (
           <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)} className="md:hidden">
             <X className="h-5 w-5" />
@@ -88,18 +115,18 @@ export function Sidebar() {
         )}
       </div>
 
-      <div className="flex-1 px-4 py-6">
-        <nav className="space-y-2">
+      <div className="flex-1 px-3 py-6">
+        <nav className="space-y-1">
           {routes.map((route) => (
             <Link
               key={route.href}
               href={route.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-accent ${
-                route.active ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+              className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-all hover:bg-accent ${
+                route.active ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground"
               }`}
               onClick={() => isMobile && setMobileMenuOpen(false)}
             >
-              <route.icon className="h-4 w-4" />
+              <route.icon className={`h-4 w-4 ${route.active ? "text-primary" : ""}`} />
               {route.label}
             </Link>
           ))}
@@ -135,7 +162,7 @@ export function Sidebar() {
           </DropdownMenu>
         </div>
 
-        <div className="flex items-center gap-3 mb-4 p-2 rounded-lg border">
+        <div className="flex items-center gap-3 mb-4 p-2 rounded-lg border bg-card/50">
           <Avatar>
             <AvatarImage src="/placeholder.svg" alt="User" />
             <AvatarFallback>{user?.email?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
@@ -182,7 +209,7 @@ export function Sidebar() {
   return (
     <>
       <div className="fixed top-0 left-0 right-0 z-40 flex items-center justify-between p-4 bg-background border-b md:hidden">
-        <h1 className="text-xl font-bold">Ecommerce</h1>
+        <Logo size="sm" />
         <Dialog open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="icon" className="md:hidden">

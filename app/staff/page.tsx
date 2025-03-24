@@ -1,10 +1,10 @@
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { AnalyticsPage } from "@/components/analytics-page"
+import { StaffPage } from "@/components/staff-page"
 
-export default function Analytics() {
+export default function Staff() {
   return (
     <DashboardLayout>
-      <AnalyticsPage />
+      <StaffPage />
     </DashboardLayout>
   )
 }
